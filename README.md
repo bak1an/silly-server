@@ -2,7 +2,7 @@
 
 Silly Server can help you to mock some HTTP services which are not implemented yet, but you are really want to use them NOW.
 
-It can mock GET, POST, PUT, DELETE and some rarely used HTTP methods. 
+It can mock GET, POST, PUT, DELETE and some more rarely used HTTP methods. 
 
 ## How?
 
@@ -12,9 +12,9 @@ Mocking service is as simple as creating directory and few files within it just 
         GET            # response content for GET /
         GET_H          # status and headers for GET /
         other_dir/
-            GET        # response content for GET /somedir
-            POST       # response content for POST /somedir
-            POST_H     # status and headers for POST /somedir
+            GET        # response content for GET /other_dir
+            POST       # response content for POST /other_dir
+            POST_H     # status and headers for POST /other_dir
 
 And then running silly server:
 
@@ -87,6 +87,9 @@ Some example included:
 
 
     % curl -X POST -d "param=value&other_param=25" localhost:8000/user
+    < HTTP/1.0 200 OK
+    < content-type: maybe some json is here
+    < 
     {
         "whatsup": "You just posted something."
     }
