@@ -50,7 +50,17 @@ So, first line is status code, other lines are headers.
 
 ## Check example!
 
-Some example included:
+Following urls are mocked:
+
+    GET /                       # 400 Bad Request.
+    GET /user                   # 200. Returns json with users list.
+    GET /user/john/status       # 200. Returns json with John's status.
+    GET /user/anonymous/status  # 403. You can't see this.
+    POST /user                  # 200. Returns some json.
+
+Any other requests will return default response.
+
+Check it out:
 
     % ./ss.py -d example
 
