@@ -7,7 +7,6 @@ import traceback
 import sys
 import types
 import mimetools
-import argparse
 
 from urlparse import urlparse
 from urlparse import parse_qs
@@ -19,6 +18,43 @@ from BaseHTTPServer import HTTPServer
 port = 8000
 iface = '0.0.0.0'
 root_path = None
+
+
+def parse_args():
+    description='Silly Server for mocking real http servers'
+    options = [
+        {
+            "dest": "root_dir",
+            "required": False,
+            "metavar": "/dir/somedir",
+            "help": """Directory where your fake responses are waiting for me.
+            If not provided - default response will be used everywhere.""",
+            "type": str,
+            "key": "-d",
+        }, 
+        {
+            "dest": "port",
+            "required": False,
+            "metavar": "port",
+            "help": "Port to listen on. Default is 8000.",
+            "type": int,
+            "key": "-p"
+        }
+    ]
+    try:
+        import argparse
+        parser = argparse.ArgumentParser(description=description)
+        for o in options:
+            parser.add_argument(o["key"], dest=o["dest"], required=o["required"], metavar=o["metavar"],
+                                help=o["help"], type=o["type"])
+        return vars(parser.parse_args())
+    except ImportError:
+        import optparse
+        parser = optparse.OptionParser(description=description)
+        for o in options:
+            parser.add_option(o["key"], dest=o["dest"], metavar=o["metavar"],
+                              help=o["help"], type=o["type"])
+        return vars(parser.parse_args()[0])
 
 
 class DefaultReposnse(object):
@@ -236,13 +272,7 @@ class SillyHandler(BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     try:
-        parser = argparse.ArgumentParser(description='Silly Server for mocking real http servers')
-        parser.add_argument("-d", dest="root_dir", required=False, metavar="/dir/somedir",
-                            help="""Directory where your fake responses are waiting for me.
-                            If not provided - default response will be used everywhere""")
-        parser.add_argument("-p", dest="port", required=False, metavar="port",
-                            help="Port to listen on. Default is 8000.", type=int)
-        args = vars(parser.parse_args())
+        args = parse_args()
         if args["root_dir"]:
             root_path = args["root_dir"]
         if args["port"]:
