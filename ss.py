@@ -1,16 +1,14 @@
 #!/usr/bin/env python
 
 import cgi
-import os
 from os import path
 import traceback
 import sys
 import types
-import mimetools
+import email.parser
 
 from urlparse import urlparse
 from urlparse import parse_qs
-from StringIO import StringIO
 from BaseHTTPServer import BaseHTTPRequestHandler
 from BaseHTTPServer import HTTPServer
 
@@ -122,11 +120,7 @@ class ResponseBuilder(object):
                 strip = lambda s: s if len(s)==0 else s[0]+s[1:].strip()
                 headers_raw = "\r\n".join(map(strip, f.readlines()[1:]))
                 f.close()
-                res = []
-                headers = mimetools.Message(StringIO(headers_raw)).dict
-                for k in headers:
-                    res.append(tuple([k, headers[k]])) 
-                return res
+                return email.parser.Parser().parsestr(headers_raw).items()
             except Exception as e:
                 print "Can't parse headers from '%s'" % filename
                 print e
