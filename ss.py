@@ -99,6 +99,8 @@ _moved_attributes = [
     MovedAttribute("StringIO", "StringIO", "io"),
     MovedAttribute("xrange", "__builtin__", "builtins", "xrange", "range"),
     MovedAttribute("zip", "itertools", "builtins", "izip", "zip"),
+    MovedAttribute("urlparse", "urlparse", "urllib.parse"),
+    MovedAttribute("parse_qs", "urlparse", "urllib.parse"),
 
     MovedModule("builtins", "__builtin__"),
     MovedModule("configparser", "ConfigParser"),
@@ -256,10 +258,11 @@ import sys
 import types
 import email.parser
 
-from urlparse import urlparse
-from urlparse import parse_qs
-from BaseHTTPServer import BaseHTTPRequestHandler
-from BaseHTTPServer import HTTPServer
+urlparse = moves.urlparse
+parse_qs = moves.parse_qs
+BaseHTTPServer = moves.BaseHTTPServer
+BaseHTTPRequestHandler = BaseHTTPServer.BaseHTTPRequestHandler
+HTTPServer = BaseHTTPServer.HTTPServer
 
 
 port = 8000
