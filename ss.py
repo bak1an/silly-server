@@ -311,7 +311,7 @@ class DefaultReposnse(object):
 
     def __init__(self):
         self.status = 200
-        self.content = "Hi, I'm default response."
+        self.content = b("Hi, I'm default response.")
         self.headers = []
 
     def get_status(self):
@@ -355,7 +355,7 @@ class ResponseBuilder(object):
     def _get_content(self, filename):
         if (path.isfile(filename)):
             try:
-                f = open(filename, "r")
+                f = open(filename, "rb")
                 c = f.read()
                 f.close()
                 return c
@@ -472,7 +472,7 @@ class SillyHandler(with_metaclass(SillyMetaclass, base=BaseHTTPRequestHandler)):
                 print_("%s: %s" % (k, q[k]))
 
     def _log_payload(self):
-        ctype = self.headers.getheader('content-type')
+        ctype = self.headers.get('content-type', None)
         if not ctype:
             print_("\nPayload: no content-type here, skip the body")
             return
@@ -480,14 +480,26 @@ class SillyHandler(with_metaclass(SillyMetaclass, base=BaseHTTPRequestHandler)):
         if ctype == 'multipart/form-data':
             postvars = cgi.parse_multipart(self.rfile, pdict)
         elif ctype == 'application/x-www-form-urlencoded':
-            length = int(self.headers.getheader('content-length'))
-            postvars = cgi.parse_qs(self.rfile.read(length), keep_blank_values=1)
+            if PY3:
+                ## FIXME: utf8 hardcoded
+                decode = lambda b: b.decode("utf8")
+            else:
+                decode = lambda s: s
+            length = int(self.headers.get('content-length', 0))
+            content = decode(self.rfile.read(length))
+            postvars = cgi.parse_qs(content, keep_blank_values=1)
         else:
             postvars = {}
         if postvars:
+            if PY3:
+                encode_values = lambda l: l
+            else:
+                ## FIXME: one more hardcoded 'utf8'
+                encode_values = lambda l: map(lambda v: v.decode("utf8"), l)
             print_("\nGot some payload:")
             for k in postvars:
-                print_("%s: %s" % (k, postvars[k]))
+                values = "['%s']" % u("', '").join(encode_values(postvars[k]))
+                print_(("%s: %s") % (k, values))
 
     def do_GET(self):
         pass
