@@ -1,8 +1,20 @@
 #!/usr/bin/env python
 
-# six
+## Silly-Server - tool for HTTP services mocking.
+## Distributed under MIT license terms.
+## See 'LICENSE' file for details.
+## Use github page for reading docs,
+## reporting issues, sending patches.
+## https://github.com/bak1an/silly-server
 
-import operator
+
+## Below are some parts of Six library for providing 
+## compatibility between python 2 and 3.
+## Full Six source can be found here https://bitbucket.org/gutworth/six
+## It is distributed under MIT license, see 'LICENSE.six'
+## for full license text.
+## Thanks to Benjamin Peterson for that wonderfull tool.
+
 import sys
 import types
 
@@ -20,10 +32,6 @@ else:
     class_types = (type, types.ClassType)
     text_type = unicode
     binary_type = str
-
-def _add_doc(func, doc):
-    """Add documentation to a function."""
-    func.__doc__ = doc
 
 
 def _import_module(name):
@@ -91,113 +99,33 @@ class _MovedItems(types.ModuleType):
 
 
 _moved_attributes = [
-    MovedAttribute("cStringIO", "cStringIO", "io", "StringIO"),
-    MovedAttribute("filter", "itertools", "builtins", "ifilter", "filter"),
-    MovedAttribute("map", "itertools", "builtins", "imap", "map"),
-    MovedAttribute("reload_module", "__builtin__", "imp", "reload"),
-    MovedAttribute("reduce", "__builtin__", "functools"),
-    MovedAttribute("StringIO", "StringIO", "io"),
-    MovedAttribute("xrange", "__builtin__", "builtins", "xrange", "range"),
-    MovedAttribute("zip", "itertools", "builtins", "izip", "zip"),
     MovedAttribute("urlparse", "urlparse", "urllib.parse"),
     MovedAttribute("parse_qs", "urlparse", "urllib.parse"),
-
-    MovedModule("builtins", "__builtin__"),
-    MovedModule("configparser", "ConfigParser"),
-    MovedModule("copyreg", "copy_reg"),
-    MovedModule("http_cookiejar", "cookielib", "http.cookiejar"),
-    MovedModule("http_cookies", "Cookie", "http.cookies"),
-    MovedModule("html_entities", "htmlentitydefs", "html.entities"),
-    MovedModule("html_parser", "HTMLParser", "html.parser"),
-    MovedModule("http_client", "httplib", "http.client"),
     MovedModule("BaseHTTPServer", "BaseHTTPServer", "http.server"),
-    MovedModule("CGIHTTPServer", "CGIHTTPServer", "http.server"),
-    MovedModule("SimpleHTTPServer", "SimpleHTTPServer", "http.server"),
-    MovedModule("cPickle", "cPickle", "pickle"),
-    MovedModule("queue", "Queue"),
-    MovedModule("reprlib", "repr"),
-    MovedModule("socketserver", "SocketServer"),
-    MovedModule("tkinter", "Tkinter"),
-    MovedModule("tkinter_dialog", "Dialog", "tkinter.dialog"),
-    MovedModule("tkinter_filedialog", "FileDialog", "tkinter.filedialog"),
-    MovedModule("tkinter_scrolledtext", "ScrolledText", "tkinter.scrolledtext"),
-    MovedModule("tkinter_simpledialog", "SimpleDialog", "tkinter.simpledialog"),
-    MovedModule("tkinter_tix", "Tix", "tkinter.tix"),
-    MovedModule("tkinter_constants", "Tkconstants", "tkinter.constants"),
-    MovedModule("tkinter_dnd", "Tkdnd", "tkinter.dnd"),
-    MovedModule("tkinter_colorchooser", "tkColorChooser",
-                "tkinter.colorchooser"),
-    MovedModule("tkinter_commondialog", "tkCommonDialog",
-                "tkinter.commondialog"),
-    MovedModule("tkinter_tkfiledialog", "tkFileDialog", "tkinter.filedialog"),
-    MovedModule("tkinter_font", "tkFont", "tkinter.font"),
-    MovedModule("tkinter_messagebox", "tkMessageBox", "tkinter.messagebox"),
-    MovedModule("tkinter_tksimpledialog", "tkSimpleDialog",
-                "tkinter.simpledialog"),
-    MovedModule("urllib_robotparser", "robotparser", "urllib.robotparser"),
-    MovedModule("winreg", "_winreg"),
 ]
 for attr in _moved_attributes:
     setattr(_MovedItems, attr.name, attr)
 del attr
 
-moves = sys.modules["six.moves"] = _MovedItems("moves")
+moves = _MovedItems("moves")
 
 if PY3:
     def b(s):
         return s.encode("latin-1")
     def u(s):
         return s
-    if sys.version_info[1] <= 1:
-        def int2byte(i):
-            return bytes((i,))
-    else:
-        # This is about 2x faster than the implementation above on 3.2+
-        int2byte = operator.methodcaller("to_bytes", 1, "big")
-    import io
-    StringIO = io.StringIO
-    BytesIO = io.BytesIO
 else:
     def b(s):
         return s
     def u(s):
         return unicode(s, "unicode_escape")
-    int2byte = chr
-    import StringIO
-    StringIO = BytesIO = StringIO.StringIO
 
 if PY3:
     import builtins
-    exec_ = getattr(builtins, "exec")
-
-
-    def reraise(tp, value, tb=None):
-        if value.__traceback__ is not tb:
-            raise value.with_traceback(tb)
-        raise value
-
-
     print_ = getattr(builtins, "print")
     del builtins
 
 else:
-    def exec_(code, globs=None, locs=None):
-        """Execute code in a namespace."""
-        if globs is None:
-            frame = sys._getframe(1)
-            globs = frame.f_globals
-            if locs is None:
-                locs = frame.f_locals
-            del frame
-        elif locs is None:
-            locs = globs
-        exec("""exec code in globs, locs""")
-
-
-    exec_("""def reraise(tp, value, tb=None):
-    raise tp, value, tb
-""")
-
 
     def print_(*args, **kwargs):
         """The new-style print function."""
@@ -248,14 +176,15 @@ def with_metaclass(meta, base=object):
     """Create a base class with a metaclass."""
     return meta("NewBase", (base,), {})
 
-# end six
+## Six library ends here  ##
+############################
 
+############################
+## Here goes silly-server ##
 
 import cgi
 from os import path
 import traceback
-import sys
-import types
 import email.parser
 
 urlparse = moves.urlparse
