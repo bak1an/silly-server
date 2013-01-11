@@ -8,7 +8,7 @@
 ## https://github.com/bak1an/silly-server
 
 
-## Below are some parts of Six library for providing 
+## Below are some parts of Six library for providing
 ## compatibility between python 2 and 3.
 ## Full Six source can be found here https://bitbucket.org/gutworth/six
 ## It is distributed under MIT license, see 'LICENSE.six'
@@ -186,6 +186,7 @@ import cgi
 from os import path
 import traceback
 import email.parser
+import re
 
 urlparse = moves.urlparse
 parse_qs = moves.parse_qs
@@ -379,7 +380,9 @@ class SillyHandler(with_metaclass(SillyMetaclass, base=BaseHTTPRequestHandler)):
         super(SillyHandler, self).__init__(*args, **kwargs)
 
     def _get_path(self):
-        return urlparse(self.path).path
+        # fix for urls like http://localhost:8000//user//john//status
+        p = re.sub("^/{2,}", "/", self.path, count=1)
+        return urlparse(p).path
 
     def _get_query(self):
         return parse_qs(urlparse(self.path).query, keep_blank_values=True)
