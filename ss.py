@@ -429,8 +429,12 @@ class SillyHandler(with_metaclass(SillyMetaclass, base=BaseHTTPRequestHandler)):
                 ## FIXME: one more hardcoded 'utf8'
                 encode_values = lambda l: map(lambda v: v.decode("utf8"), l)
             print_("\nGot some payload:")
+            print_("Content-type: %s" % ctype)
             for k in postvars:
-                values = "['%s']" % u("', '").join(encode_values(postvars[k]))
+                try:
+                    values = "['%s']" % u("', '").join(encode_values(postvars[k]))
+                except UnicodeDecodeError:
+                    values = "!!!some unprintable, probably binary stuff!!!"
                 print_(("%s: %s") % (k, values))
 
     def do_GET(self):
