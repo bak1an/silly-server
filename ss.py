@@ -403,39 +403,42 @@ class SillyHandler(with_metaclass(SillyMetaclass, base=BaseHTTPRequestHandler)):
             for k in q:
                 print_("%s: %s" % (k, q[k]))
 
+    def _get_method(self):
+        return self.requestline.split()[0]
+
+    def _print_field(self, field):
+        print_("-" * 40)
+        print_("Name: %s" % field.name)
+        if field.filename:
+            print("Filename: %s" % field.filename)
+            value = field.file.read(1024)
+        else:
+            value = field.value
+        if len(value) > 500:
+            print_("Value(cutted): %s" % value[:500])
+        else:
+            print_("Value: %s" % value)
+
     def _log_payload(self):
         ctype = self.headers.get('content-type', None)
         if not ctype:
             print_("\nPayload: no content-type here, skip the body")
             return
         ctype, pdict = cgi.parse_header(ctype)
-        if ctype == 'multipart/form-data':
-            postvars = cgi.parse_multipart(self.rfile, pdict)
-        elif ctype == 'application/x-www-form-urlencoded':
-            if PY3:
-                ## FIXME: utf8 hardcoded
-                decode = lambda b: b.decode("utf8")
-            else:
-                decode = lambda s: s
-            length = int(self.headers.get('content-length', 0))
-            content = decode(self.rfile.read(length))
-            postvars = cgi.parse_qs(content, keep_blank_values=1)
-        else:
-            postvars = {}
-        if postvars:
-            if PY3:
-                encode_values = lambda l: l
-            else:
-                ## FIXME: one more hardcoded 'utf8'
-                encode_values = lambda l: map(lambda v: v.decode("utf8"), l)
+        form = cgi.FieldStorage(
+                fp=self.rfile,
+                environ={'REQUEST_METHOD': self._get_method()},
+                headers=self.headers)
+        if form:
             print_("\nGot some payload:")
             print_("Content-type: %s" % ctype)
-            for k in postvars:
-                try:
-                    values = "['%s']" % u("', '").join(encode_values(postvars[k]))
-                except UnicodeDecodeError:
-                    values = "!!!some unprintable, probably binary stuff!!!"
-                print_(("%s: %s") % (k, values))
+            for k in form:
+                f = form[k]
+                if isinstance(f, list):
+                    for v in f:
+                        self._print_field(v)
+                else:
+                    self._print_field(f)
 
     def do_GET(self):
         pass
